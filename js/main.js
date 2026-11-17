@@ -5,7 +5,7 @@ import * as S from './storage.js';
 import { Timer, runSteps } from './timer.js';
 import { randomTeams, swapPlayers, validateTeams } from './teams.js';
 import { loadForDifficulty, buildWords } from './words.js';
-import { sfx, setMuted, isMuted } from './sound.js';
+import { sfx, setMuted, isMuted, soundAvailable, initSounds, hooks } from './sound.js';
 
 let state = null;          // единый источник истины игры
 let draft = null;          // черновик настройки (до начала игры)
@@ -16,7 +16,7 @@ const timer = new Timer();
 
 const persist = () => { if (!state) return; state.status === 'final' ? S.clearGame() : S.saveGame(state); };
 const guard = ms => { const n = Date.now(); if (n < lockUntil) return false; lockUntil = n + ms; return true; };
-const chrome = () => UI.setChrome(!!state && state.status !== 'final', isMuted());
+const chrome = () => UI.setChrome(!!state && state.status !== 'final', isMuted(), soundAvailable());
 
 // ---------- Настройка ----------
 function initDraft() {
@@ -35,9 +35,9 @@ function initDraft() {
 
 function renderSetup() {
   chrome();
-  if (draft.step === 1) UI.show(UI.setup1(draft));
-  else if (draft.step === 2) UI.show(UI.setup2(draft));
-  else UI.show(UI.setup3(draft));
+  if (draft.step === 1) UI.show(UI.setup1(draft), '', 'setup1');
+  else if (draft.step === 2) UI.show(UI.setup2(draft), '', 'setup2');
+  else UI.show(UI.setup3(draft), '', 'setup3');
 }
 
 async function setup1Next() {
@@ -77,17 +77,17 @@ async function replay() {
 // ---------- Отрисовка игры ----------
 function render() {
   chrome();
-  if (!state) return UI.show(UI.home(S.loadGame()));
+  if (!state) return UI.show(UI.home(S.loadGame()), '', 'home');
   switch (state.status) {
-    case 'roundIntro': return UI.show(UI.roundIntro(state));
-    case 'handoff': return UI.show(UI.handoff(state));
+    case 'roundIntro': return UI.show(UI.roundIntro(state), '', 'intro' + state.round);
+    case 'handoff': return UI.show(UI.handoff(state), '', 'handoff' + state.turnCounter);
     case 'playing': {
-      UI.show(UI.playing(state), 'play t' + state.turn.teamIdx);
+      UI.show(UI.playing(state), 'play t' + state.turn.teamIdx, 'play');
       return UI.updateTimer(timer.left(), state.settings.turnDuration * 1000);
     }
-    case 'turnResult': return UI.show(UI.turnResult(state));
-    case 'roundResult': return UI.show(UI.roundResult(state));
-    case 'final': return UI.show(UI.final(state));
+    case 'turnResult': return UI.show(UI.turnResult(state), '', 'result' + state.turnCounter);
+    case 'roundResult': return UI.show(UI.roundResult(state), '', 'roundres' + state.round);
+    case 'final': return UI.show(UI.final(state), '', 'final');
   }
 }
 
@@ -119,7 +119,7 @@ function startTimer() {
 function finishTurn() {
   if (!state || !G.endTurn(state)) return;
   timer.stop();
-  state.pool.length ? sfx.end() : sfx.round();
+  if (state.pool.length) sfx.end();   // звук конца раунда играет при нажатии «Далее»
   persist(); render();
 }
 
@@ -160,7 +160,7 @@ const A = {
 
   // игра
   'intro-ok': () => { if (state && G.acceptIntro(state)) { persist(); render(); } },
-  'begin': () => { if (!state || state.status !== 'handoff' || counting) return; sfx.count(); startCountdown(); },
+  'begin': () => { if (!state || state.status !== 'handoff' || counting) return; startCountdown(); },
   'guess': () => {
     if (!state || state.status !== 'playing' || !guard(250)) return;
     if (timer.left() <= 0) return finishTurn();       // время вышло одновременно с нажатием — очко не начисляется
@@ -172,13 +172,20 @@ const A = {
   'skip': () => {
     if (!state || state.status !== 'playing' || !guard(250)) return;
     if (timer.left() <= 0) return finishTurn();
-    if (G.skip(state)) { persist(); render(); }
+    if (G.skip(state)) { sfx.skip(); persist(); render(); }
   },
   'turn-next': () => {
     if (!state || !G.afterTurn(state)) return;
-    if (state.status !== 'handoff') sfx.round();
+    if (state.status === 'final') sfx.win(); else if (state.status === 'roundResult') sfx.round();
     persist(); render();
   },
+  'review': () => { if (state && state.status === 'turnResult') UI.reviewModal(state); },
+  'toggle-word': b => {
+    if (!state || state.status !== 'turnResult') return;
+    const e = state.turn.log.find(x => x.id === +b.dataset.id);
+    if (e && G.setWordStatus(state, e.id, !e.ok)) { persist(); UI.reviewModal(state); render(); }
+  },
+  'close-review': () => UI.modal(''),
   'next-round': () => { if (state && G.nextRound(state)) { persist(); render(); } },
   'replay': replay,
 };
@@ -198,4 +205,6 @@ document.addEventListener('input', e => {
 
 // ---------- Запуск ----------
 setMuted(S.loadMuted());
+initSounds();
+hooks.change = chrome;   // скрыть кнопку звука, если папки sounds/ нет
 render();

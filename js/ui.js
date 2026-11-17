@@ -1,5 +1,5 @@
 // Отрисовка экранов. Модуль только строит разметку из переданных данных.
-import { ROUNDS, TOTAL_ROUNDS, wordById, winner } from './game.js';
+import { ROUNDS, TOTAL_ROUNDS, wordById, winner, guessedCount } from './game.js';
 import { turnInfo } from './teams.js';
 import { plural } from './utils.js';
 
@@ -16,17 +16,30 @@ export const DIFFS = [
 ];
 export const diffTitle = id => DIFFS.find(d => d.id === id)?.title || id;
 
-export function show(html, cls = '') {
-  const a = $('#app');
-  a.className = 'screen ' + cls;
+let lastKey = null;
+/**
+ * key — идентификатор экрана. Если он совпадает с предыдущим (перерисовка того же экрана:
+ * клик по кнопке настройки и т.п.), анимация появления не повторяется и прокрутка сохраняется.
+ */
+export function show(html, cls = '', key = null) {
+  const a = $('#app'), same = key !== null && key === lastKey, y = window.scrollY;
+  lastKey = key;
+  a.className = 'screen ' + cls + (same ? ' noanim' : '');
   a.innerHTML = html;
-  window.scrollTo(0, 0);
+  window.scrollTo(0, same ? y : 0);
 }
-export function setChrome(inGame, muted) {
+export function setChrome(inGame, muted, soundOn = true) {
   $('#exitBtn').hidden = !inGame;
+  $('#soundBtn').hidden = !soundOn;
   $('#soundBtn').textContent = muted ? '🔇' : '🔊';
 }
-export function modal(html) { $('#modal').innerHTML = html ? `<div class="overlay"><div class="dialog">${html}</div></div>` : ''; }
+export function modal(html) {
+  const m = $('#modal');
+  if (!html) { m.innerHTML = ''; return; }
+  const d = m.querySelector('.dialog');
+  if (d) { const y = d.scrollTop; d.innerHTML = html; d.scrollTop = y; }   // окно уже открыто — обновляем без мигания
+  else m.innerHTML = `<div class="overlay"><div class="dialog">${html}</div></div>`;
+}
 export const confirmExit = () => modal(`<h2>Завершить игру?</h2><p>Вы действительно хотите завершить игру? Весь текущий прогресс будет потерян.</p>
   <button class="btn primary" data-action="cancel-modal">Продолжить игру</button><button class="btn danger" data-action="confirm-exit">Выйти</button>`);
 export const alertModal = msg => modal(`<h2>Не удалось начать</h2><div class="err">${esc(msg)}</div><button class="btn primary" data-action="cancel-modal">Понятно</button>`);
@@ -103,7 +116,7 @@ export function handoff(s) {
   <div class="actions"><button class="btn primary big" data-action="begin">Начать</button></div>`;
 }
 
-export const countdown = (label, last) => show(`<div class="count ${last ? 'go' : ''}" key="${label}">${label}</div>`, 'play');
+export const countdown = (label, last) => show(`<div class="count ${last ? 'go' : ''}">${label}</div>`, 'play', 'count' + label);
 
 export function playing(s) {
   const t = s.turn, w = wordById(s, t.current);
@@ -126,12 +139,24 @@ export function updateTimer(ms, total) {
 }
 
 export function turnResult(s) {
-  const t = s.turn;
+  const t = s.turn, n = guessedCount(t);
   return `<div class="badge center">Ход завершён</div>
   <section class="card handcard t${t.teamIdx}"><div class="bigname">${esc(t.playerName)}</div>${pill(s, t.teamIdx)}
-  <div class="bignum">${t.guessed.length}</div><p>${plural(t.guessed.length, ['слово отгадано', 'слова отгадано', 'слов отгадано'])} за ход</p></section>
+  <div class="bignum">${n}</div><p>${plural(n, ['слово отгадано', 'слова отгадано', 'слов отгадано'])} за ход</p></section>
   ${board(s, t.teamIdx)}
-  <div class="actions"><button class="btn primary" data-action="turn-next">Далее</button></div>`;
+  <div class="actions"><button class="btn" data-action="review">Слова хода</button><button class="btn primary" data-action="turn-next">Далее</button></div>`;
+}
+
+/** Окно проверки слов хода: можно поменять статус любого показанного слова. */
+export function reviewModal(s) {
+  const row = e => `<div class="wrow"><span>${esc(wordById(s, e.id).text)}</span>
+    <button class="wbtn ${e.ok ? '' : 'yes'}" data-action="toggle-word" data-id="${e.id}">${e.ok ? 'Не отгадано' : 'Отгадано'}</button></div>`;
+  const ok = s.turn.log.filter(e => e.ok), no = s.turn.log.filter(e => !e.ok);
+  modal(`<h2>Слова хода: ${esc(s.turn.playerName)}</h2>
+    <small>Кнопка справа меняет статус слова. Очки и пул слов пересчитываются сразу.</small>
+    <h3>Отгадано (${ok.length})</h3>${ok.map(row).join('') || '<small>Нет таких слов</small>'}
+    <h3>Не отгадано (${no.length})</h3>${no.map(row).join('') || '<small>Нет таких слов</small>'}
+    <button class="btn primary" data-action="close-review">Готово</button>`);
 }
 
 function roundTable(s) {

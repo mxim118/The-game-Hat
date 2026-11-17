@@ -62,7 +62,7 @@ export function acceptIntro(s) {
 export function beginTurn(s) {
   if (s.status !== 'handoff') return false;
   const { teamIdx, player } = turnInfo(s);
-  s.turn = { teamIdx, playerId: player.id, playerName: player.name, guessed: [], skipped: [], current: null };
+  s.turn = { teamIdx, playerId: player.id, playerName: player.name, log: [], skipped: [], current: null };
   s.status = 'playing';
   pickWord(s);
   return true;
@@ -80,7 +80,33 @@ function pickWord(s) {
   if (!c.length) { t.skipped = []; c = s.pool.filter(id => id !== prev); } // все остальные уже пропускались — идём по кругу
   if (!c.length) c = [...s.pool];                                          // в пуле осталось единственное слово
   t.current = c[Math.floor(Math.random() * c.length)];
+  // журнал хода: все показанные слова и их статус (нужен для проверки слов после хода)
+  if (!t.log.some(e => e.id === t.current)) t.log.push({ id: t.current, ok: false });
   return t.current;
+}
+
+export const guessedCount = t => t.log.filter(e => e.ok).length;
+
+/**
+ * Ручная правка статуса слова после хода (например, не успели нажать «Отгадано»).
+ * Пересчитывает пул, очки команды, очки раунда и личную статистику.
+ */
+export function setWordStatus(s, id, ok) {
+  if (s.status !== 'turnResult') return false;
+  const t = s.turn, e = t.log.find(x => x.id === id);
+  if (!e || e.ok === ok) return false;
+  const before = guessedCount(t), d = ok ? 1 : -1, st = s.stats[t.playerId];
+  e.ok = ok;
+  const i = s.pool.indexOf(id);
+  if (ok && i !== -1) s.pool.splice(i, 1);       // отгадано — слово уходит из пула
+  if (!ok && i === -1) s.pool.push(id);          // не отгадано — слово возвращается в пул
+  s.teams[t.teamIdx].score += d;
+  s.roundScores[s.round][t.teamIdx] += d;
+  st.words += d;
+  const after = before + d;
+  if (before === 0 && after > 0) st.successTurns++;
+  if (before > 0 && after === 0) st.successTurns--;
+  return true;
 }
 
 /** «Отгадано». Возвращает 'next' | 'roundDone' | null (действие отклонено). */
@@ -89,7 +115,7 @@ export function guess(s) {
   const t = s.turn, id = t.current, idx = s.pool.indexOf(id);
   if (idx === -1) return null;
   s.pool.splice(idx, 1);
-  t.guessed.push(id);
+  t.log.find(e => e.id === id).ok = true;
   s.teams[t.teamIdx].score++;
   s.roundScores[s.round][t.teamIdx]++;
   s.stats[t.playerId].words++;
@@ -111,7 +137,7 @@ export function endTurn(s) {
   if (s.status !== 'playing') return false;
   const st = s.stats[s.turn.playerId];
   st.turns++;
-  if (s.turn.guessed.length) st.successTurns++;
+  if (guessedCount(s.turn)) st.successTurns++;
   s.turn.current = null;     // неотгаданное слово не терялось: оно всё это время было в пуле
   s.turnCounter++;           // следующий ход — следующая команда/игрок
   s.status = 'turnResult';

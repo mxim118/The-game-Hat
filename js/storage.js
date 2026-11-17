@@ -1,5 +1,5 @@
 // Сохранение настроек и прогресса игры в localStorage.
-const K = { setup: 'hat.setup.v1', game: 'hat.game.v1', muted: 'hat.muted.v1' };
+const K = { setup: 'hat.setup.v1', game: 'hat.game.v2', muted: 'hat.muted.v1' };
 
 const read = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* хранилище недоступно */ } };
