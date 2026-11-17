@@ -1,0 +1,133 @@
+:root{
+  --bg:#F3F1FB; --ink:#1B1740; --muted:#6A678A; --card:#fff; --line:#E2DEF3;
+  --t0:#5B3DF5; --t1:#E8590C; --good:#16A34A; --bad:#D92D2D; --warn:#E8A317;
+  --r:20px; --gap:14px; --shadow:0 8px 24px rgba(27,23,64,.08);
+  --team:var(--ink);
+}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--ink);min-height:100dvh;
+  font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.top,#app{width:100%;max-width:560px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 4px}
+.brand{font-weight:800;font-size:18px;letter-spacing:-.01em}
+.top-actions{display:flex;gap:8px}
+.icon-btn{width:44px;height:44px;border-radius:14px;border:0;background:var(--card);box-shadow:var(--shadow);font-size:18px;cursor:pointer;color:var(--ink)}
+.icon-btn[hidden]{display:none}
+#app{flex:1;display:flex;flex-direction:column;gap:var(--gap);padding:8px 16px 28px}
+.t0{--team:var(--t0)} .t1{--team:var(--t1)}
+
+h1{font-size:clamp(28px,8vw,38px);line-height:1.1;font-weight:850;letter-spacing:-.02em}
+h2{font-size:17px;font-weight:750} h3{font-size:15px;font-weight:750;margin-bottom:6px}
+small,.hint{color:var(--muted);font-size:14px}
+.lead{font-size:19px;color:var(--muted)}
+.center{text-align:center;align-items:center}
+
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.card.row{flex-direction:row;align-items:center;justify-content:space-between}
+.pill{display:inline-block;background:var(--team);color:#fff;font-weight:700;font-size:14px;padding:4px 12px;border-radius:99px;align-self:flex-start}
+.center .pill,.handcard .pill{align-self:center}
+.badge{align-self:flex-start;background:var(--ink);color:#fff;font-weight:700;font-size:14px;padding:5px 12px;border-radius:99px}
+.center .badge{align-self:center}
+.err{background:#FDECEC;color:#9B1C1C;border-radius:14px;padding:12px 14px;white-space:pre-line;font-weight:600;font-size:15px}
+
+/* Кнопки */
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.btn{min-height:58px;border-radius:18px;border:2px solid var(--line);background:var(--card);color:var(--ink);
+  font:inherit;font-weight:750;font-size:18px;cursor:pointer;padding:12px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:transform .12s,opacity .2s}
+.btn:active{transform:scale(.97)} .btn:disabled{opacity:.5;cursor:default}
+.btn small{font-weight:500;opacity:.8;color:inherit}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.big{min-height:72px;font-size:22px}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff;min-height:84px;font-size:26px;box-shadow:0 10px 24px rgba(22,163,74,.3)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+:focus-visible{outline:3px solid var(--t0);outline-offset:2px}
+
+/* Настройка */
+.diffs{display:grid;gap:8px}
+.diff{text-align:left;border:2px solid var(--line);background:var(--bg);border-radius:16px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.diff small{font-size:14px}
+.diff.on{border-color:var(--t0);background:#fff;box-shadow:0 0 0 3px rgba(91,61,245,.15)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:0 18px;border-radius:99px;border:2px solid var(--line);background:var(--bg);font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:48px;height:48px;border-radius:14px;border:0;background:var(--ink);color:#fff;font-size:24px;font-weight:700;cursor:pointer}
+.stepper button:active{transform:scale(.93)}
+.stepper output{min-width:54px;text-align:center;font-size:24px;font-weight:800}
+.names{display:grid;gap:8px}
+.input{width:100%;min-height:50px;border-radius:14px;border:2px solid var(--line);padding:0 14px;font:inherit;background:var(--bg);color:var(--ink)}
+.input:focus{border-color:var(--t0);outline:0}
+.teams2{display:grid;gap:var(--gap)}
+.tcol{border-top:6px solid var(--team)}
+.teamname{font-weight:800}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{min-height:44px;padding:0 16px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font:inherit;font-weight:650;color:var(--ink);cursor:pointer}
+.pchip.sel{border-color:var(--team);background:var(--team);color:#fff}
+.sumlist{display:grid;gap:6px}
+.sumlist div{display:flex;justify-content:space-between;gap:12px}
+.sumlist b{text-align:right}
+
+/* Главная */
+.hero{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:28px 0 12px}
+.logo{font-size:84px;line-height:1;animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px) rotate(-4deg)}}
+
+/* Счёт */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tcard{background:var(--card);border-radius:16px;padding:10px 14px;border-left:6px solid var(--team);display:flex;justify-content:space-between;align-items:center;gap:8px;box-shadow:var(--shadow);min-width:0}
+.tcard span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+.tcard b{font-size:24px}
+.tcard.cur{outline:3px solid var(--team)}
+
+/* Правила */
+.rules{display:grid;gap:10px}
+.rules ul{padding-left:20px;font-size:15px;display:grid;gap:3px}
+.rules .ok{border-top:5px solid var(--good)} .rules .no{border-top:5px solid var(--bad)}
+
+/* Передача, результаты */
+.bigname{font-size:clamp(34px,11vw,52px);overflow-wrap:anywhere}
+.handcard{align-items:center;text-align:center;padding:24px 16px;gap:8px;border-top:8px solid var(--team)}
+.bignum{font-size:96px;font-weight:900;line-height:1;color:var(--team)}
+.tbl{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.tbl th,.tbl td{padding:11px 12px;text-align:center;border-bottom:1px solid var(--line)}
+.tbl th{color:var(--team);font-size:14px} .tbl td:first-child,.tbl th:first-child{text-align:left}
+.tbl tr.cur td{background:#F7F5FF;font-weight:800} .tbl tr.total td{font-weight:900;font-size:19px;border-bottom:0}
+.winner{font-size:clamp(28px,8vw,38px);font-weight:900;text-align:center;color:var(--team)}
+.trophy{font-size:72px;text-align:center}
+
+/* Игровой экран */
+.play{gap:12px}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.phead .mini{font-size:14px;color:var(--muted)}
+.phead b{font-size:20px;margin-right:6px}
+.timer{width:78px;height:78px;border-radius:50%;border:6px solid var(--team);display:grid;place-items:center;font-size:32px;font-weight:900;flex:none;background:var(--card);transition:border-color .3s,color .3s}
+.timer.warn{border-color:var(--warn);color:var(--warn)}
+.timer.danger{border-color:var(--bad);color:var(--bad);animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.1)}}
+.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--team);transition:background .3s}
+.bar.warn i{background:var(--warn)} .bar.danger i{background:var(--bad)}
+.wordwrap{flex:1;display:grid;place-items:center;min-height:200px;background:var(--card);border-radius:28px;box-shadow:var(--shadow);padding:20px;border-bottom:8px solid var(--team)}
+.word{font-size:clamp(34px,10.5vw,64px);font-weight:900;text-align:center;line-height:1.1;overflow-wrap:anywhere;hyphens:auto;letter-spacing:-.02em;animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.88);opacity:0}}
+.pactions{display:grid;gap:8px}
+.count{flex:1;display:grid;place-items:center;font-size:clamp(90px,34vw,200px);font-weight:900;color:var(--team);animation:pop .4s ease-out}
+.count.go{font-size:clamp(56px,18vw,110px)}
+
+/* Появление экранов при смене (игровой экран не анимируется целиком) */
+.screen:not(.play)>*{animation:in .3s ease-out both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+
+/* Окно подтверждения */
+.overlay{position:fixed;inset:0;background:rgba(27,23,64,.55);display:grid;place-items:center;padding:20px;z-index:10;animation:fade .2s}
+.dialog{background:#fff;border-radius:24px;padding:22px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px;animation:pop .2s}
+@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (min-width:600px){#app{padding-top:20px}.teams2{grid-template-columns:1fr 1fr}.rules{grid-template-columns:1fr 1fr}}
